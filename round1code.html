@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code the Couture | Decode the System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff5100;
+            --secondary: #ffcc00;
+            --bg: #0a0a0a;
+            --accent: #00ff00;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: white;
+            text-align: center;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(255,80,0,0.1), transparent);
+            z-index: -1;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; padding: 40px 20px; }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 81, 0, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        h1 { font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; }
+        .glitch-text { color: var(--primary); font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 30px; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #111;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary), #ff2200);
+            border: none;
+            padding: 15px;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        button:hover { opacity: 0.8; transform: scale(1.02); }
+
+        .puzzle-box {
+            background: #000;
+            padding: 20px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            text-align: left;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+
+        .hidden { display: none; }
+
+        .theme-option {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+        }
+
+        .theme-option:hover { background: rgba(255, 81, 0, 0.1); }
+        .theme-option h3 { color: var(--secondary); margin: 0; font-size: 1.1rem; }
+        .theme-option p { font-size: 0.85rem; margin: 5px 0 0; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔥 CODE THE COUTURE</h1>
+    <p class="glitch-text">DECODE • DESIGN • DISRUPT</p>
+
+    <div id="step-1">
+        <div class="card">
+            <h3>TEAM REGISTRATION</h3>
+            <input type="text" id="teamName" placeholder="Team Name">
+            <input type="text" id="leaderName" placeholder="Leader Name">
+            <textarea id="members" placeholder="Team Members (comma separated)"></textarea>
+            <input type="tel" id="phone" placeholder="Phone Number">
+            <input type="text" id="college" placeholder="College Name">
+            <button onclick="lockAndLoad()">Initialize Decode</button>
+        </div>
+    </div>
+
+    <div id="step-2" class="hidden">
+        <div class="card">
+            <h2 style="color: var(--accent)">SYSTEM ENCRYPTED</h2>
+            <p>A random category has been assigned to your team. Decode it to proceed.</p>
+            <div id="puzzle-display" class="puzzle-box"></div>
+            <input type="text" id="puzzle-input" placeholder="Enter the Decoded Answer">
+            <button onclick="verifyDecode()">Verify Protocol</button>
+        </div>
+    </div>
+
+    <div id="step-3" class="hidden">
+        <div class="card">
+            <p>Access Granted.</p>
+            <h2 id="revealed-cat" style="color: var(--secondary); margin-top: 0;"></h2>
+            <p>Select your specific theme (Limited Slots):</p>
+            <div id="theme-list"></div>
+        </div>
+    </div>
+
+    <div id="step-4" class="hidden">
+        <div class="card">
+            <h1 style="color: var(--accent)">LOCKED IN ✅</h1>
+            <div id="final-summary" style="text-align: left; margin: 20px 0;"></div>
+            <p style="font-size: 0.8rem;">Take a screenshot and show it to the organizers immediately.</p>
+            <button onclick="location.reload()">Return to Home</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const data = {
+    "AI X FUTURE": {
+        puzzle: "<b>__ X ______</b><br><br>1. <b>__</b> = 01000001 01001001<br>2. <b>______</b> = I am always ahead of you but never arrive. If you look at me in a mirror, I am exactly where I was. What am I?",
+        answer: "ai future",
+        themes: [
+            {t: "Half Code, Half Human", d: "Dress as if you are split between logic and emotion."},
+            {t: "Watched All the Time", d: "AI surveillance & data tracking symbols."},
+            {t: "Controlled by the Feed", d: "Algorithm addiction - social media control."},
+            {t: "Emotionless Efficiency", d: "Pure machine mindset - grey/silver tones."},
+            {t: "Stuck in a Loop", d: "Predictable algorithmic life - repeating patterns."},
+            {t: "Human Becoming Data", d: "Numbers, binary, and barcodes."},
+            {t: "War Against AI", d: "Humanity fighting back - cardboard armor."},
+            {t: "Bio-Hacked Human", d: "Genetically modified - leaf + wire fusion."}
+        ]
+    },
+    "EARTH & CLIMATE": {
+        puzzle: "<b>_____ & _______</b><br>LAME CITED THRASH<br><br>In trashion, we rearrange waste to create meaning. Remove <b>'H'</b> from THRASH and <b>'D'</b> from CITED. Rearrange the remaining letters.",
+        answer: "earth climate",
+        themes: [
+            {t: "The Air We Wear", d: "Surviving toxic air - masks and filters."},
+            {t: "Water on the Edge", d: "Water scarcity - collection & storage look."},
+            {t: "Plastic Mermaid", d: "Ocean waste - bottles and nets."},
+            {t: "Nature Strikes Back", d: "Mother Nature reclaiming space - vines/leaves."},
+            {t: "Walking Landfill", d: "Carrying the weight of waste."},
+            {t: "Earth on Fever", d: "Global warming - red patches & cracked earth adaptions."}
+        ]
+    },
+    "ENERGY": {
+        puzzle: "I cannot be created, and I refuse to be destroyed; I only change my style forms. I am the Spark in the wire and the Heat in the thread. Einstein calls me mc². What am I?",
+        answer: "energy",
+        themes: [
+            {t: "Solar Saviour", d: "CDs and mirrors to reflect sunlight."},
+            {t: "Wind Walker", d: "Paper pinwheels and flowing ribbons."},
+            {t: "Human Battery", d: "Living source of power - cardboard batteries."},
+            {t: "Power from Waste", d: "Transforming discarded trash into power."}
+        ]
+    },
+    "CULTURE & MEDIA": {
+        puzzle: "What spreads faster than truth but dies in 24 hours? I am the currency of the digital age. (Starts with V)",
+        answer: "viral",
+        themes: [
+            {t: "CC - Clickbait Couture", d: "Dramatic headlines and caution tape."},
+            {t: "The Walking Billboard", d: "Humans as advertisements and logos."},
+            {t: "Filtered Life", d: "Fake perfection - smooth vs chaotic layers."},
+            {t: "Validation Machine", d: "Dependency on likes - heart counters."}
+        ]
+    },
+    "SOCIETY & ECONOMY": {
+        puzzle: "I define your value but I am just paper or code. If I crash, the world panics. What am I?",
+        answer: "money",
+        themes: [
+            {t: "Walking Economy Crash", d: "Inflation chaos - fake notes and torn tags."},
+            {t: "Consumerism Monster", d: "Walking product of endless buying."},
+            {t: "The Invisible Worker", d: "Hidden labor - tools and erased identity."},
+            {t: "Rich vs Poor Divide", d: "Dual economy - glam vs survival."}
+        ]
+    }
+};
+
+let selectedCategory = "";
+let registrationData = {};
+
+function lockAndLoad() {
+    const name = document.getElementById('teamName').value;
+    if(!name) return alert("Please enter Team Name!");
+    
+    registrationData = {
+        team: name,
+        leader: document.getElementById('leaderName').value,
+        phone: document.getElementById('phone').value
+    };
+
+    const categories = Object.keys(data);
+    selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+    
+    document.getElementById('puzzle-display').innerHTML = data[selectedCategory].puzzle;
+    showStep(2);
+}
+
+function verifyDecode() {
+    const input = document.getElementById('puzzle-input').value.toLowerCase();
+    const correctAns = data[selectedCategory].answer;
+    
+    if(input.includes(correctAns)) {
+        document.getElementById('revealed-cat').innerText = "UNLOCKED: " + selectedCategory;
+        renderThemes();
+        showStep(3);
+    } else {
+        alert("Decoding Failed. Check your logic and try again! ⚡");
+    }
+}
+
+function renderThemes() {
+    const container = document.getElementById('theme-list');
+    container.innerHTML = "";
+    data[selectedCategory].themes.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'theme-option';
+        div.innerHTML = `<h3>${item.t}</h3><p>${item.d}</p>`;
+        div.onclick = () => finalize(item.t);
+        container.appendChild(div);
+    });
+}
+
+function finalize(theme) {
+    const summary = document.getElementById('final-summary');
+    summary.innerHTML = `
+        <b>Team:</b> ${registrationData.team}<br>
+        <b>Leader:</b> ${registrationData.leader}<br>
+        <b>Category:</b> ${selectedCategory}<br>
+        <b>Theme:</b> ${theme}
+    `;
+    showStep(4);
+}
+
+function showStep(s) {
+    for(let i=1; i<=4; i++) {
+        document.getElementById('step-'+i).classList.add('hidden');
+    }
+    document.getElementById('step-'+s).classList.remove('hidden');
+}
+</script>
+
+</body>
+</html>
