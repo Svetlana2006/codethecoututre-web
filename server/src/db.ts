@@ -9,7 +9,6 @@ export interface Entry {
   college: string;
   email: string;
   category?: string;
-  puzzleIndex?: number;
   puzzleAnswer?: string;
   theme?: string;
   status: string;

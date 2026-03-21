@@ -13,8 +13,7 @@ function App() {
   });
   const [sessionId, setSessionId] = useState("");
   const [assignedCategory, setAssignedCategory] = useState(null);
-  const [assignedPuzzleIndex, setAssignedPuzzleIndex] = useState(0);
-  const [puzzleInput, setPuzzleInput] = useState("");
+  const [puzzleInputs, setPuzzleInputs] = useState(["", "", ""]);
   const [finalTheme, setFinalTheme] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -53,7 +52,6 @@ function App() {
       setSessionId(resp.data.id);
       const cat = CATEGORIES.find(c => c.name === resp.data.categoryName);
       setAssignedCategory(cat);
-      setAssignedPuzzleIndex(resp.data.puzzleIndex);
       setStep(2);
     } catch(err) {
       setErrorMsg(err.response?.data?.error || "Registration failed. Please try again.");
@@ -61,13 +59,15 @@ function App() {
     setLoading(false);
   };
 
-  const checkPuzzle = () => {
-    const correctAnswer = assignedCategory.puzzles[assignedPuzzleIndex].answer.toLowerCase();
-    if (puzzleInput.toLowerCase().includes(correctAnswer)) {
+  const checkPuzzles = () => {
+    const allCorrect = assignedCategory.puzzles.every((p, i) => 
+      (puzzleInputs[i] || "").trim().toUpperCase() === p.answer.toUpperCase()
+    );
+    if (allCorrect) {
       setStep(3);
       setErrorMsg('');
     } else {
-      setErrorMsg("System access denied. Re-check your decoding logic! ⚡");
+      setErrorMsg("System access denied. One or more sectors remain encrypted! ⚡");
     }
   };
 
@@ -79,7 +79,7 @@ function App() {
       await axios.post(`${API_URL}/theme`, { 
          id: sessionId, 
          themeName, 
-         puzzleAnswer: puzzleInput 
+         puzzleAnswer: puzzleInputs.join(", ") 
       });
       setFinalTheme(themeName);
       setStep(4);
@@ -116,34 +116,52 @@ function App() {
       {step === 2 && assignedCategory && (
         <div className="card fade-in">
           <h2 className="glitch">SYSTEM ENCRYPTED</h2>
-          <p>A category has been assigned. Decode it to unlock themes.</p>
+          <p>A category has been assigned. Decode ALL sectors to unlock themes.</p>
           <div className="puzzle-box">
              <h3>Category Locked: Sector {assignedCategory.id}</h3>
-             <div dangerouslySetInnerHTML={{ __html: assignedCategory.puzzles[assignedPuzzleIndex].text }} />
+             
+             {assignedCategory.puzzles.map((p, i) => (
+                <div key={i} className="puzzle-item" style={{ marginBottom: "1.5rem", textAlign: "left", padding: "1rem", background: "rgba(0,0,0,0.3)", borderRadius: "8px" }}>
+                   <div dangerouslySetInnerHTML={{ __html: p.text }} />
+                   <div style={{ color: "var(--primary)", marginTop: "0.5rem", fontWeight: "bold" }}>({p.length} letters)</div>
+                   <input 
+                      placeholder={`Answer ${i+1}`} 
+                      value={puzzleInputs[i]} 
+                      style={{ marginTop: "0.5rem", width: "100%" }}
+                      onChange={e => {
+                         const copy = [...puzzleInputs];
+                         copy[i] = e.target.value.toUpperCase();
+                         setPuzzleInputs(copy);
+                      }} 
+                   />
+                </div>
+             ))}
+             
           </div>
           {errorMsg && <div className="error-box">{errorMsg}</div>}
-          <input placeholder="Your Answer" value={puzzleInput} onChange={e => setPuzzleInput(e.target.value)} />
-          <button onClick={checkPuzzle}>Verify Protocol</button>
+          <button onClick={checkPuzzles}>VERIFY DECRYPTION SEQUENCE</button>
         </div>
       )}
 
       {step === 3 && assignedCategory && (
         <div className="theme-selection fade-in">
           <h2 className="unlocked-text">CATEGORY UNLOCKED: {assignedCategory.name}</h2>
+          <p style={{marginBottom: "1rem"}}>Select your specific design theme below to lock in your slot.</p>
           {errorMsg && <div className="error-box">{errorMsg}</div>}
           <div className="theme-grid">
-            {assignedCategory.themes.map((themeName, index) => {
-              const currentCount = slotData.slots[themeName] || 0;
+            {assignedCategory.themes.map((themeObj, index) => {
+              const currentCount = slotData.slots[themeObj.name] || 0;
               const isFull = currentCount >= slotData.max;
               const available = slotData.max - currentCount;
               
               return (
-                <div key={index} className={`theme-card ${isFull ? 'disabled housefull' : ''}`} onClick={() => !isFull && !loading && selectTheme(themeName)}>
-                  <h3>{themeName}</h3>
+                <div key={index} className={`theme-card ${isFull ? 'disabled housefull' : ''}`} onClick={() => !isFull && !loading && selectTheme(themeObj.name)}>
+                  <h3>{themeObj.name}</h3>
+                  <p className="theme-desc" style={{ fontSize: "0.85rem", margin: "1rem 0", color: "#ccc", lineHeight: "1.4" }}>{themeObj.description}</p>
                   <div className="slot-badge">
                      {isFull ? "HOUSEFULL" : `${available}/${slotData.max} Available`}
                   </div>
-                  {!isFull && <span>Select →</span>}
+                  {!isFull && <span style={{display: 'block', marginTop: '1rem', color: 'var(--primary)'}}>Select Theme →</span>}
                 </div>
               );
             })}

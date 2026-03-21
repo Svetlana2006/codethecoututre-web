@@ -44,10 +44,9 @@ app.post("/api/register", (req, res) => {
     return res.status(409).json({ error: "This Team Name is already taken." });
   }
 
-  // Assign random category & random puzzle
+  // Assign random category (all puzzles within it will be shown)
   const catIndex = Math.floor(Math.random() * CATEGORIES.length);
   const assignedCategoryName = CATEGORIES[catIndex].name;
-  const assignedPuzzleIndex = Math.floor(Math.random() * CATEGORIES[catIndex].puzzles.length);
 
   const id = nanoid(10);
   db.addEntry({
@@ -58,12 +57,11 @@ app.post("/api/register", (req, res) => {
     college,
     email,
     category: assignedCategoryName,
-    puzzleIndex: assignedPuzzleIndex,
     status: "REGISTERED",
     timestamp: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
   });
 
-  return res.json({ kind: "player", id, categoryName: assignedCategoryName, puzzleIndex: assignedPuzzleIndex });
+  return res.json({ kind: "player", id, categoryName: assignedCategoryName });
 });
 
 // 2. Select Theme - Step 3 of the frontend flow
@@ -116,7 +114,7 @@ app.get("/api/slots", (req, res) => {
   const slots: Record<string, number> = {};
   CATEGORIES.forEach(c => {
     c.themes.forEach(t => {
-      slots[t] = entries.filter(e => e.theme === t).length;
+      slots[t.name] = entries.filter(e => e.theme === t.name).length;
     });
   });
   return res.json({ slots, max: MAX_SLOTS_PER_THEME });
