@@ -1,108 +1,202 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { CATEGORIES, MAX_SLOTS_PER_THEME, SHEET_API_URL } from './data';
 import './App.css';
 
-const DATA = {
-  "AI X FUTURE": {
-    puzzle: "<b>__ X ______</b><br/><br/>1. <b>__</b> = 01000001 01001001<br/>2. <b>______</b> = I am always ahead of you but never arrive. If you look at me in a mirror, I am exactly where I was. What am I?",
-    answer: "ai future",
-    themes: [
-      { t: "Half Code, Half Human", d: "Split between logic and emotion." },
-      { t: "Watched All the Time", d: "Surveillance & data tracking." },
-      { t: "Controlled by the Feed", d: "Algorithm addiction." },
-      { t: "War Against AI", d: "Humanity fighting back - cardboard armor." },
-      { t: "Bio-Hacked Human", d: "Genetically modified - leaf + wire fusion." }
-    ]
-  },
-  "EARTH & CLIMATE": {
-    puzzle: "<b>_____ & _______</b><br/>LAME CITED THRASH<br/><br/>Remove <b>'H'</b> from THRASH and <b>'D'</b> from CITED. Rearrange remaining letters.",
-    answer: "earth climate",
-    themes: [
-      { t: "The Air We Wear", d: "Surviving toxic air - masks and filters." },
-      { t: "Plastic Mermaid", d: "Ocean waste - bottles and nets." },
-      { t: "Nature Strikes Back", d: "Mother Nature reclaiming space." },
-      { t: "Earth on Fever", d: "Global warming - red patches & cracked earth." }
-    ]
-  },
-  "ENERGY": {
-    puzzle: "I cannot be created, and I refuse to be destroyed; I only change my forms. Einstein calls me mc². What am I?",
-    answer: "energy",
-    themes: [
-      { t: "Solar Saviour", d: "CDs and mirrors to reflect sunlight." },
-      { t: "Human Battery", d: "Living source of power." },
-      { t: "Power from Waste", d: "Transforming discarded trash into power." }
-    ]
-  },
-  "CULTURE & MEDIA": {
-    puzzle: "What spreads faster than truth but dies in 24 hours? I am the currency of the digital age. (Starts with V)",
-    answer: "viral",
-    themes: [
-      { t: "CC - Clickbait Couture", d: "Dramatic headlines and caution tape." },
-      { t: "The Walking Billboard", d: "Humans as advertisements and logos." },
-      { t: "Filtered Life", d: "Fake perfection - smooth vs chaotic." }
-    ]
-  },
-  "SOCIETY & ECONOMY": {
-    puzzle: "I define your value but I am just paper or code. If I crash, the world panics. What am I?",
-    answer: "money",
-    themes: [
-      { t: "Walking Economy Crash", d: "Inflation chaos - fake notes." },
-      { t: "Consumerism Monster", d: "Walking product of endless buying." },
-      { t: "Rich vs Poor Divide", d: "Dual economy - glam vs survival." }
-    ]
-  }
-};
-
 function App() {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({ team: '', leader: '', phone: '', college: '' });
-  const [category, setCategory] = useState("");
+  const [step, setStep] = useState(0); // 0 = Check, 1 = Form, 2 = Puzzle, 3 = Theme, 4 = Success, 5 = Admin
+  const [formData, setFormData] = useState({
+    team: '', leader: '', phone: '', college: '', email: ''
+  });
+  const [allEntries, setAllEntries] = useState([]);
+  const [assignedCategory, setAssignedCategory] = useState(null);
   const [puzzleInput, setPuzzleInput] = useState("");
   const [finalTheme, setFinalTheme] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [windowStatus, setWindowStatus] = useState("closed"); // "open", "future1", "future2", "closed"
 
-  const handleStart = (e) => {
+  // Check Time Windows
+  useEffect(() => {
+    checkTimeWindow();
+    const interval = setInterval(checkTimeWindow, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkTimeWindow = () => {
+    const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const april1 = new Date("2026-04-01T00:00:00+05:30");
+    
+    // Window 1: April 1, 2026 13:00 - 14:00 IST
+    const w1Start = new Date("2026-04-01T13:00:00+05:30");
+    const w1End = new Date("2026-04-01T14:00:00+05:30");
+    
+    // Window 2: April 1, 2026 19:00 - 20:00 IST
+    const w2Start = new Date("2026-04-01T19:00:00+05:30");
+    const w2End = new Date("2026-04-01T20:00:00+05:30");
+
+    if (now >= w1Start && now <= w1End) {
+      setWindowStatus("open");
+    } else if (now >= w2Start && now <= w2End) {
+      setWindowStatus("open");
+    } else if (now < w1Start) {
+      setWindowStatus("future1");
+    } else if (now > w1End && now < w2Start) {
+      setWindowStatus("future2");
+    } else {
+      setWindowStatus("closed");
+    }
+  };
+
+  const handleStartLogin = () => {
+    setStep(1);
+    fetchEntries(); // start pre-fetching early
+  }
+
+  const fetchEntries = async () => {
+    try {
+      const resp = await axios.get(SHEET_API_URL);
+      setAllEntries(resp.data);
+      return resp.data;
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  };
+
+  const checkAdmin = () => {
+    return formData.team.trim() === 'admin' && 
+           formData.leader.trim() === 'admin' && 
+           formData.phone.trim() === '9999999999' && 
+           formData.college.trim().toUpperCase() === 'CIC' && 
+           formData.email.trim() === 'admin@gmail.com';
+  }
+
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    const cats = Object.keys(DATA);
-    setCategory(cats[Math.floor(Math.random() * cats.length)]);
+    if (checkAdmin()) {
+      setStep(5);
+      return;
+    }
+
+    if (formData.phone.length !== 10) {
+      setErrorMsg("WhatsApp number must be exactly 10 digits");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    const entries = await fetchEntries();
+    
+    // Duplicate checks
+    const isDuplicatePhone = entries.some(entry => entry.phone === formData.phone);
+    const isDuplicateTeam = entries.some(entry => entry.team.toLowerCase() === formData.team.toLowerCase());
+    
+    if (isDuplicatePhone) {
+      setErrorMsg("This WhatsApp number has already been registered.");
+      setLoading(false);
+      return;
+    }
+    if (isDuplicateTeam) {
+      setErrorMsg("This Team Name is already taken.");
+      setLoading(false);
+      return;
+    }
+
+    // Determine category via round robin
+    const catIndex = entries.length % CATEGORIES.length;
+    setAssignedCategory(CATEGORIES[catIndex]);
+    
     setStep(2);
+    setLoading(false);
   };
 
   const checkPuzzle = () => {
-    if (puzzleInput.toLowerCase().includes(DATA[category].answer)) {
+    if (puzzleInput.toLowerCase().includes(assignedCategory.answer.toLowerCase())) {
       setStep(3);
+      setErrorMsg('');
     } else {
-      alert("System access denied. Re-check your decoding logic! ⚡");
+      setErrorMsg("System access denied. Re-check your decoding logic! ⚡");
     }
   };
 
- const selectTheme = async (themeName) => {
-    // 1. Prepare the data object
+  const selectTheme = async (themeName) => {
+    setLoading(true);
+    setErrorMsg('');
+    // Re-verify slots right before posting
+    const entries = await fetchEntries();
+    
+    const themeCount = entries.filter(e => e.theme === themeName).length;
+    if (themeCount >= MAX_SLOTS_PER_THEME) {
+       setErrorMsg(`Try quicker with another theme. '${themeName}' just got filled up by another team!`);
+       setLoading(false);
+       return;
+    }
+
+    const timestampNow = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"});
+    
     const finalData = { 
-      ...formData, 
-      category: category, 
+      timestamp: timestampNow,
+      team: formData.team, 
+      leader: formData.leader,
+      phone: formData.phone,
+      college: formData.college,
+      email: formData.email,
+      category: assignedCategory.name, 
+      puzzleAnswer: puzzleInput,
       theme: themeName,
-      timestamp: new Date().toLocaleString() 
+      status: "SECURED"
     };
 
-    // 2. Update the UI immediately so the user sees the success screen
-    setFinalTheme(themeName);
-    setStep(4);
-
-    // 3. Send the data to your Google Sheet (via Sheet.best or Apps Script)
     try {
-      await fetch('YOUR_SHEET_BEST_URL_HERE', {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(finalData),
+      await axios.post(SHEET_API_URL, finalData, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      console.log("Data successfully sent to Sheet!");
-    } catch (error) {
-      console.error("Error saving data:", error);
-      alert("Registration saved locally, but failed to upload to the cloud. Please show your screenshot to the coordinator!");
+      setFinalTheme(themeName);
+      setStep(4);
+    } catch (err) {
+      setErrorMsg("Cloud upload failed. Please try clicking select again or contact organizers.");
     }
-  }; 
+    setLoading(false);
+  };
+
+  // --- RENDERING ---
+
+  if (step === 0 && windowStatus !== "open") {
+    return (
+      <div className="app-container">
+        <header>
+          <h1>🔥 CODE THE COUTURE</h1>
+          <p className="subtitle">DECODE • DESIGN • DISRUPT</p>
+        </header>
+        <div className="card text-center">
+          {windowStatus === "future1" && <h3>We will be live on 1st April 1pm (13:00 hours). Save the date, see you then.</h3>}
+          {windowStatus === "future2" && <h3>Round one is successfully over. We will be live once more on 1st April 7pm (19:00 hours). Don't miss it.</h3>}
+          {windowStatus === "closed" && <h3>Registrations are currently closed. See you next time.</h3>}
+          
+          <br/><br/>
+          <button onClick={() => setStep(1)} className="admin-hidden-btn">Admin Access</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 0 && windowStatus === "open") {
+    return (
+      <div className="app-container">
+        <header>
+          <h1>🔥 CODE THE COUTURE</h1>
+          <p className="subtitle">DECODE • DESIGN • DISRUPT</p>
+        </header>
+        <div className="card text-center">
+          <h2>THE SYSTEM IS OPEN.</h2>
+          <p>Get your category uniquely assigned and decode it to claim your theme.</p>
+          <button onClick={handleStartLogin} disabled={loading}>{loading ? "Initializing..." : "START HUNT"}</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       <header>
@@ -111,55 +205,130 @@ function App() {
       </header>
 
       {step === 1 && (
-        <form className="card" onSubmit={handleStart}>
+        <form className="card fade-in" onSubmit={handleRegisterSubmit}>
           <h2>Registration</h2>
-          <input placeholder="Team Name" required onChange={e => setFormData({...formData, team: e.target.value})} />
-          <input placeholder="Leader Name" required onChange={e => setFormData({...formData, leader: e.target.value})} />
-          <input placeholder="Phone Number" required onChange={e => setFormData({...formData, phone: e.target.value})} />
-          <input placeholder="College" required onChange={e => setFormData({...formData, college: e.target.value})} />
-          <button type="submit">Initialize Decode</button>
+          {errorMsg && <div className="error-box">{errorMsg}</div>}
+          <input placeholder="Team Name" required value={formData.team} onChange={e => setFormData({...formData, team: e.target.value})} />
+          <input placeholder="Team Leader's Name" required value={formData.leader} onChange={e => setFormData({...formData, leader: e.target.value})} />
+          <input type="number" placeholder="WhatsApp Number (10 digits)" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+          <input placeholder="College" required value={formData.college} onChange={e => setFormData({...formData, college: e.target.value})} />
+          <input type="email" placeholder="Email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+          
+          <button type="submit" disabled={loading}>{loading ? 'Authenticating...' : 'Initialize Decode'}</button>
         </form>
       )}
 
-      {step === 2 && (
-        <div className="card">
+      {step === 2 && assignedCategory && (
+        <div className="card fade-in">
           <h2 className="glitch">SYSTEM ENCRYPTED</h2>
           <p>A category has been assigned. Decode it to unlock themes.</p>
-          <div className="puzzle-box" dangerouslySetInnerHTML={{ __html: DATA[category].puzzle }} />
-          <input placeholder="Your Answer" onChange={e => setPuzzleInput(e.target.value)} />
+          <div className="puzzle-box">
+             <h3>Category Locked: {assignedCategory.name}</h3>
+             <div dangerouslySetInnerHTML={{ __html: assignedCategory.puzzle }} />
+          </div>
+          {errorMsg && <div className="error-box">{errorMsg}</div>}
+          <input placeholder="Your Answer" value={puzzleInput} onChange={e => setPuzzleInput(e.target.value)} />
           <button onClick={checkPuzzle}>Verify Protocol</button>
         </div>
       )}
 
-      {step === 3 && (
-        <div className="theme-selection">
-          <h2 className="unlocked-text">CATEGORY UNLOCKED: {category}</h2>
+      {step === 3 && assignedCategory && (
+        <div className="theme-selection fade-in">
+          <h2 className="unlocked-text">CATEGORY UNLOCKED: {assignedCategory.name}</h2>
+          {errorMsg && <div className="error-box">{errorMsg}</div>}
           <div className="theme-grid">
-            {DATA[category].themes.map((item, index) => (
-              <div key={index} className="theme-card" onClick={() => selectTheme(item.t)}>
-                <h3>{item.t}</h3>
-                <p>{item.d}</p>
-                <span>Select →</span>
-              </div>
-            ))}
+            {assignedCategory.themes.map((themeName, index) => {
+              const currentCount = allEntries.filter(e => e.theme === themeName).length;
+              const isFull = currentCount >= MAX_SLOTS_PER_THEME;
+              const available = MAX_SLOTS_PER_THEME - currentCount;
+              
+              return (
+                <div key={index} className={`theme-card ${isFull ? 'disabled housefull' : ''}`} onClick={() => !isFull && !loading && selectTheme(themeName)}>
+                  <h3>{themeName}</h3>
+                  <div className="slot-badge">
+                     {isFull ? "HOUSEFULL" : `${available}/${MAX_SLOTS_PER_THEME} Available`}
+                  </div>
+                  {!isFull && <span>Select →</span>}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {step === 4 && (
-        <div className="card success-card">
+        <div className="card success-card fade-in">
           <h1 className="success-icon">✅</h1>
           <h2>THEME SECURED</h2>
           <div className="summary">
             <p><strong>Team:</strong> {formData.team}</p>
-            <p><strong>Category:</strong> {category}</p>
+            <p><strong>Category:</strong> {assignedCategory.name}</p>
             <p><strong>Theme:</strong> {finalTheme}</p>
           </div>
           <p className="footer-note">Take a screenshot now for the organizers!</p>
         </div>
       )}
+
+      {step === 5 && (
+         <AdminDashboard entries={allEntries} reload={fetchEntries} />
+      )}
     </div>
   );
+}
+
+function AdminDashboard({ entries, reload }) {
+  const [filterStr, setFilterStr] = useState('');
+  
+  const handleReload = async () => {
+    await reload();
+  };
+
+  const filtered = entries.filter(e => 
+    e.team?.toLowerCase().includes(filterStr.toLowerCase()) || 
+    e.college?.toLowerCase().includes(filterStr.toLowerCase()) ||
+    e.category?.toLowerCase().includes(filterStr.toLowerCase()) ||
+    e.theme?.toLowerCase().includes(filterStr.toLowerCase())
+  );
+
+  return (
+    <div className="admin-dashboard fade-in">
+       <h2>Admin Command Center</h2>
+       
+       <div className="admin-controls card">
+         <input placeholder="Search Team, College, Category..." value={filterStr} onChange={e => setFilterStr(e.target.value)} />
+         <button onClick={handleReload}>↻ Refresh Data</button>
+       </div>
+
+       <div className="admin-table-wrapper">
+         <table className="admin-table">
+           <thead>
+             <tr>
+               <th>Team</th>
+               <th>Leader</th>
+               <th>Phone</th>
+               <th>College</th>
+               <th>Category</th>
+               <th>Theme</th>
+               <th>Time</th>
+             </tr>
+           </thead>
+           <tbody>
+             {filtered.map((e, idx) => (
+               <tr key={idx}>
+                 <td>{e.team}</td>
+                 <td>{e.leader}</td>
+                 <td>{e.phone}</td>
+                 <td>{e.college}</td>
+                 <td>{e.category}</td>
+                 <td>{e.theme}</td>
+                 <td>{e.timestamp}</td>
+               </tr>
+             ))}
+           </tbody>
+         </table>
+       </div>
+    </div>
+  )
 }
 
 export default App;
