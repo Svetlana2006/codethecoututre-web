@@ -4,7 +4,7 @@ import { CATEGORIES, MAX_SLOTS_PER_THEME, SHEET_API_URL } from './data';
 import './App.css';
 
 function App() {
-  const [step, setStep] = useState(0); // 0 = Check, 1 = Form, 2 = Puzzle, 3 = Theme, 4 = Success, 5 = Admin
+  const [step, setStep] = useState(1); // 1 = Form, 2 = Puzzle, 3 = Theme, 4 = Success, 5 = Admin
   const [formData, setFormData] = useState({
     team: '', leader: '', phone: '', college: '', email: ''
   });
@@ -14,44 +14,11 @@ function App() {
   const [finalTheme, setFinalTheme] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [windowStatus, setWindowStatus] = useState("closed"); // "open", "future1", "future2", "closed"
 
-  // Check Time Windows
+  // Fetch entries immediately so duplicate checks are quick
   useEffect(() => {
-    checkTimeWindow();
-    const interval = setInterval(checkTimeWindow, 10000);
-    return () => clearInterval(interval);
+    fetchEntries();
   }, []);
-
-  const checkTimeWindow = () => {
-    const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    const april1 = new Date("2026-04-01T00:00:00+05:30");
-    
-    // Window 1: April 1, 2026 13:00 - 14:00 IST
-    const w1Start = new Date("2026-04-01T13:00:00+05:30");
-    const w1End = new Date("2026-04-01T14:00:00+05:30");
-    
-    // Window 2: April 1, 2026 19:00 - 20:00 IST
-    const w2Start = new Date("2026-04-01T19:00:00+05:30");
-    const w2End = new Date("2026-04-01T20:00:00+05:30");
-
-    if (now >= w1Start && now <= w1End) {
-      setWindowStatus("open");
-    } else if (now >= w2Start && now <= w2End) {
-      setWindowStatus("open");
-    } else if (now < w1Start) {
-      setWindowStatus("future1");
-    } else if (now > w1End && now < w2Start) {
-      setWindowStatus("future2");
-    } else {
-      setWindowStatus("closed");
-    }
-  };
-
-  const handleStartLogin = () => {
-    setStep(1);
-    fetchEntries(); // start pre-fetching early
-  }
 
   const fetchEntries = async () => {
     try {
@@ -161,41 +128,6 @@ function App() {
   };
 
   // --- RENDERING ---
-
-  if (step === 0 && windowStatus !== "open") {
-    return (
-      <div className="app-container">
-        <header>
-          <h1>🔥 CODE THE COUTURE</h1>
-          <p className="subtitle">DECODE • DESIGN • DISRUPT</p>
-        </header>
-        <div className="card text-center">
-          {windowStatus === "future1" && <h3>We will be live on 1st April 1pm (13:00 hours). Save the date, see you then.</h3>}
-          {windowStatus === "future2" && <h3>Round one is successfully over. We will be live once more on 1st April 7pm (19:00 hours). Don't miss it.</h3>}
-          {windowStatus === "closed" && <h3>Registrations are currently closed. See you next time.</h3>}
-          
-          <br/><br/>
-          <button onClick={() => setStep(1)} className="admin-hidden-btn">Admin Access</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 0 && windowStatus === "open") {
-    return (
-      <div className="app-container">
-        <header>
-          <h1>🔥 CODE THE COUTURE</h1>
-          <p className="subtitle">DECODE • DESIGN • DISRUPT</p>
-        </header>
-        <div className="card text-center">
-          <h2>THE SYSTEM IS OPEN.</h2>
-          <p>Get your category uniquely assigned and decode it to claim your theme.</p>
-          <button onClick={handleStartLogin} disabled={loading}>{loading ? "Initializing..." : "START HUNT"}</button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="app-container">

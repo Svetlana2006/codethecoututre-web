@@ -19,10 +19,17 @@ header h1 {
   font-size: 3.5rem;
   font-weight: 900;
   background: linear-gradient(90deg, var(--primary), var(--secondary));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
   margin-bottom: 10px;
+  animation: glowText 3s infinite alternate;
+}
+
+@keyframes glowText {
+  0% { filter: drop-shadow(0 0 10px rgba(255, 42, 95, 0.4)); }
+  100% { filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.6)) drop-shadow(0 0 10px rgba(255, 42, 95, 0.6)); }
 }
 
 .subtitle {
@@ -46,6 +53,7 @@ header h1 {
   max-width: 500px;
   position: relative;
   overflow: hidden;
+  animation: floating 6s ease-in-out infinite, fadeIn 0.5s ease-out forwards;
 }
 
 .card::before {
@@ -53,6 +61,19 @@ header h1 {
   position: absolute;
   top: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+  animation: scanline 3s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: scaleX(0); opacity: 0; }
+  50% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(0); opacity: 0; }
+}
+
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
 }
 
 .fade-in {
@@ -112,11 +133,12 @@ button {
   font-weight: 700;
   letter-spacing: 2px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-transform: uppercase;
   margin-top: 10px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 5px 15px rgba(255, 42, 95, 0.2);
 }
 
 button::after {
@@ -135,8 +157,12 @@ button:hover::after {
 }
 
 button:hover {
-  box-shadow: 0 0 20px rgba(255, 42, 95, 0.4);
-  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 42, 95, 0.6), 0 0 40px rgba(255, 42, 95, 0.2);
+  transform: translateY(-4px) scale(1.02);
+}
+
+button:active {
+  transform: translateY(0px) scale(0.98);
 }
 
 button:disabled {
@@ -167,6 +193,13 @@ button:disabled {
   line-height: 1.6;
   margin-bottom: 25px;
   border-radius: 8px;
+  box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05);
+  animation: pulseBox 3s infinite alternate;
+}
+
+@keyframes pulseBox {
+  0% { border-color: rgba(0, 240, 255, 0.2); box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.02); }
+  100% { border-color: rgba(0, 240, 255, 0.7); box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.15); }
 }
 
 .puzzle-box h3 {
@@ -205,18 +238,33 @@ button:disabled {
   padding: 25px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 140px;
+  overflow: hidden;
+}
+
+.theme-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: skewX(-20deg);
+  transition: 0.5s;
+}
+
+.theme-card:hover:not(.disabled)::before {
+  left: 150%;
 }
 
 .theme-card h3 {
   font-size: 1.3rem;
   color: #fff;
   margin-bottom: 15px;
+  transition: color 0.3s;
 }
 
 .theme-card span {
@@ -225,12 +273,20 @@ button:disabled {
   font-size: 1.1rem;
   margin-top: auto;
   align-self: flex-start;
+  transition: transform 0.3s;
 }
 
 .theme-card:hover:not(.disabled) {
-  transform: translateY(-5px);
-  border-color: rgba(0, 240, 255, 0.3);
-  box-shadow: 0 10px 25px rgba(0, 240, 255, 0.1);
+  transform: translateY(-8px) scale(1.03);
+  border-color: rgba(0, 240, 255, 0.6);
+  box-shadow: 0 15px 35px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05);
+}
+
+.theme-card:hover:not(.disabled) h3 {
+  color: var(--secondary);
+}
+.theme-card:hover:not(.disabled) span {
+  transform: translateX(5px);
 }
 
 .theme-card.housefull {
