@@ -192,6 +192,27 @@ function AdminDashboard({ token }) {
     e.theme?.toLowerCase().includes(filterStr.toLowerCase())
   );
 
+  const exportToCSV = () => {
+    if (entries.length === 0) return;
+    
+    // Create CSV rows mapping exactly to the database
+    const headers = ["Team", "Leader", "Phone", "College", "Email", "Category", "Theme", "Time"];
+    const rows = entries.map(e => [
+      e.team, e.leader, e.phone, e.college, e.email, e.category, e.theme, e.timestamp
+    ].map(field => `"${(field || '').toString().replace(/"/g, '""')}"`).join(","));
+    
+    // Blob and download
+    const csvString = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `code_the_couture_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="admin-dashboard fade-in">
        <h2>Admin Command Center</h2>
@@ -199,6 +220,7 @@ function AdminDashboard({ token }) {
        <div className="admin-controls card">
          <input placeholder="Search Team, College, Category..." value={filterStr} onChange={e => setFilterStr(e.target.value)} />
          <button onClick={handleReload}>↻ Refresh Data</button>
+         <button onClick={exportToCSV} style={{background: 'var(--secondary)', color: 'black'}}>📥 Export Excel</button>
        </div>
 
        <div className="admin-table-wrapper">
