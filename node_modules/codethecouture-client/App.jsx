@@ -3,6 +3,8 @@ import axios from 'axios';
 import { CATEGORIES, MAX_SLOTS_PER_THEME } from './data';
 import './App.css';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 function App() {
   const [step, setStep] = useState(1); // 1 = Form, 2 = Puzzle, 3 = Theme, 4 = Success, 5 = Admin
   const [formData, setFormData] = useState({
@@ -25,7 +27,7 @@ function App() {
 
   const fetchSlots = async () => {
     try {
-      const resp = await axios.get('/api/slots');
+      const resp = await axios.get(`${API_URL}/slots`);
       setSlotData(resp.data);
     } catch (err) {
       console.error(err);
@@ -38,7 +40,7 @@ function App() {
     setErrorMsg('');
     
     try {
-      const resp = await axios.post('/api/register', formData);
+      const resp = await axios.post(`${API_URL}/register`, formData);
       
       if (resp.data.kind === "admin") {
          setAdminToken(resp.data.token);
@@ -73,7 +75,7 @@ function App() {
     setErrorMsg('');
 
     try {
-      await axios.post('/api/theme', { 
+      await axios.post(`${API_URL}/theme`, { 
          id: sessionId, 
          themeName, 
          puzzleAnswer: puzzleInput 
@@ -174,7 +176,7 @@ function AdminDashboard({ token }) {
   
   const handleReload = async () => {
     try {
-      const resp = await axios.get('/api/entries', { headers: { Authorization: token } });
+      const resp = await axios.get(`${API_URL}/entries`, { headers: { Authorization: token } });
       setEntries(resp.data);
     } catch(e) {
       console.error(e);
