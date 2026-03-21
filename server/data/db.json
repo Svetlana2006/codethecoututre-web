@@ -10,6 +10,32 @@
       "category": "Climate Survival & Adaptation",
       "status": "REGISTERED",
       "timestamp": "3/21/2026, 8:35:48 PM"
+    },
+    {
+      "id": "IjL4qIIoQg",
+      "team": "sv",
+      "leader": "v",
+      "phone": "9818638440",
+      "college": "CIC",
+      "email": "sv@gmail.com",
+      "category": "Waste, Pollution & Circularity",
+      "puzzleIndex": 0,
+      "status": "REGISTERED",
+      "timestamp": "3/21/2026, 8:42:18 PM"
+    },
+    {
+      "id": "iQjcHTjg9U",
+      "team": "sve",
+      "leader": "s",
+      "phone": "9810342398",
+      "college": "civ",
+      "email": "cic@gmail.com",
+      "category": "Energy & Resource System",
+      "puzzleIndex": 2,
+      "status": "SECURED",
+      "timestamp": "3/21/2026, 8:44:41 PM",
+      "theme": "Fire Within",
+      "puzzleAnswer": "system"
     }
   ]
 }

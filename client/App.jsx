@@ -10,6 +10,7 @@ function App() {
   });
   const [sessionId, setSessionId] = useState("");
   const [assignedCategory, setAssignedCategory] = useState(null);
+  const [assignedPuzzleIndex, setAssignedPuzzleIndex] = useState(0);
   const [puzzleInput, setPuzzleInput] = useState("");
   const [finalTheme, setFinalTheme] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,6 +50,7 @@ function App() {
       setSessionId(resp.data.id);
       const cat = CATEGORIES.find(c => c.name === resp.data.categoryName);
       setAssignedCategory(cat);
+      setAssignedPuzzleIndex(resp.data.puzzleIndex);
       setStep(2);
     } catch(err) {
       setErrorMsg(err.response?.data?.error || "Registration failed. Please try again.");
@@ -57,7 +59,8 @@ function App() {
   };
 
   const checkPuzzle = () => {
-    if (puzzleInput.toLowerCase().includes(assignedCategory.answer.toLowerCase())) {
+    const correctAnswer = assignedCategory.puzzles[assignedPuzzleIndex].answer.toLowerCase();
+    if (puzzleInput.toLowerCase().includes(correctAnswer)) {
       setStep(3);
       setErrorMsg('');
     } else {
@@ -112,8 +115,8 @@ function App() {
           <h2 className="glitch">SYSTEM ENCRYPTED</h2>
           <p>A category has been assigned. Decode it to unlock themes.</p>
           <div className="puzzle-box">
-             <h3>Category Locked: {assignedCategory.name}</h3>
-             <div dangerouslySetInnerHTML={{ __html: assignedCategory.puzzle }} />
+             <h3>Category Locked: Sector {assignedCategory.id}</h3>
+             <div dangerouslySetInnerHTML={{ __html: assignedCategory.puzzles[assignedPuzzleIndex].text }} />
           </div>
           {errorMsg && <div className="error-box">{errorMsg}</div>}
           <input placeholder="Your Answer" value={puzzleInput} onChange={e => setPuzzleInput(e.target.value)} />

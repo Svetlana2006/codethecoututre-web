@@ -44,9 +44,10 @@ app.post("/api/register", (req, res) => {
     return res.status(409).json({ error: "This Team Name is already taken." });
   }
 
-  // Assign category round robin based on successful previous registers
-  const catIndex = entries.length % CATEGORIES.length;
+  // Assign random category & random puzzle
+  const catIndex = Math.floor(Math.random() * CATEGORIES.length);
   const assignedCategoryName = CATEGORIES[catIndex].name;
+  const assignedPuzzleIndex = Math.floor(Math.random() * CATEGORIES[catIndex].puzzles.length);
 
   const id = nanoid(10);
   db.addEntry({
@@ -57,11 +58,12 @@ app.post("/api/register", (req, res) => {
     college,
     email,
     category: assignedCategoryName,
+    puzzleIndex: assignedPuzzleIndex,
     status: "REGISTERED",
     timestamp: new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
   });
 
-  return res.json({ kind: "player", id, categoryName: assignedCategoryName });
+  return res.json({ kind: "player", id, categoryName: assignedCategoryName, puzzleIndex: assignedPuzzleIndex });
 });
 
 // 2. Select Theme - Step 3 of the frontend flow
