@@ -3,7 +3,8 @@ import axios from 'axios';
 import { CATEGORIES, MAX_SLOTS_PER_THEME } from './data';
 import './App.css';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Automatically target the local Node backend during development, or the Render backend in production.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 function App() {
   const [step, setStep] = useState(1); // 1 = Form, 2 = Puzzle, 3 = Theme, 4 = Success, 5 = Admin
