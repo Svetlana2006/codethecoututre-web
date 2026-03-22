@@ -20,6 +20,11 @@ function App() {
   const [adminToken, setAdminToken] = useState("");
   const [slotData, setSlotData] = useState({ slots: {}, max: 3 });
 
+  // Timer States
+  const [startTime, setStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [finalTime, setFinalTime] = useState(null);
+
   // Fetch slots immediately so duplicate checks are quick
   useEffect(() => {
     fetchSlots();
@@ -32,6 +37,26 @@ function App() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  useEffect(() => {
+    let animationFrameId;
+    if (step === 2 && startTime) {
+      const updateTimer = () => {
+        setElapsedTime(Date.now() - startTime);
+        animationFrameId = requestAnimationFrame(updateTimer);
+      };
+      animationFrameId = requestAnimationFrame(updateTimer);
+    }
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [step, startTime]);
+
+  const formatTime = (ms) => {
+    if (ms == null) return "N/A";
+    const mins = Math.floor(ms / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+    const milli = (ms % 1000).toString().padStart(3, '0');
+    return `${mins}:${secs}.${milli}`;
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -52,6 +77,7 @@ function App() {
       setSessionId(resp.data.id);
       const cat = CATEGORIES.find(c => c.name === resp.data.categoryName);
       setAssignedCategory(cat);
+      setStartTime(Date.now());
       setStep(2);
     } catch(err) {
       setErrorMsg(err.response?.data?.error || "Registration failed. Please try again.");
@@ -64,6 +90,7 @@ function App() {
       (puzzleInputs[i] || "").trim().toUpperCase() === p.answer.toUpperCase()
     );
     if (allCorrect) {
+      setFinalTime(elapsedTime);
       setStep(3);
       setErrorMsg('');
     } else {
@@ -79,7 +106,8 @@ function App() {
       await axios.post(`${API_URL}/theme`, { 
          id: sessionId, 
          themeName, 
-         puzzleAnswer: puzzleInputs.join(", ") 
+         puzzleAnswer: puzzleInputs.join(", "),
+         timeTaken: finalTime
       });
       setFinalTheme(themeName);
       setStep(4);
@@ -94,6 +122,11 @@ function App() {
 
   return (
     <div className="app-container">
+      {step === 2 && (
+        <div style={{ position: 'fixed', top: '1.5rem', right: '2rem', background: 'rgba(0,0,0,0.8)', padding: '0.8rem 1.5rem', borderRadius: '8px', border: '1px solid var(--primary)', fontSize: '1.5rem', fontFamily: 'monospace', color: 'var(--primary)', zIndex: 1000, boxShadow: '0 0 15px rgba(233, 69, 96, 0.4)' }}>
+          ⏱ {formatTime(elapsedTime)}
+        </div>
+      )}
       <header>
         <h1>🔥 CODE THE COUTURE</h1>
         <p className="subtitle">DECODE • DESIGN • DISRUPT</p>
@@ -114,7 +147,7 @@ function App() {
       )}
 
       {step === 2 && assignedCategory && (
-        <div className="card fade-in">
+        <div className="card puzzle-card fade-in">
           <h2 className="glitch">SYSTEM ENCRYPTED</h2>
           <p>A category has been assigned. Decode ALL sectors to unlock themes.</p>
           <div className="puzzle-box">
@@ -215,10 +248,13 @@ function AdminDashboard({ token }) {
     if (entries.length === 0) return;
     
     // Create CSV rows mapping exactly to the database
-    const headers = ["Team", "Leader", "Phone", "College", "Email", "Category", "Theme", "Time"];
-    const rows = entries.map(e => [
-      e.team, e.leader, e.phone, e.college, e.email, e.category, e.theme, e.timestamp
-    ].map(field => `"${(field || '').toString().replace(/"/g, '""')}"`).join(","));
+    const headers = ["Team", "Leader", "Phone", "College", "Email", "Category", "Theme", "Time Taken", "Registration Time"];
+    const rows = entries.map(e => {
+      const formattedTime = e.timeTaken ? formatTimeAdmin(e.timeTaken) : "N/A";
+      return [
+        e.team, e.leader, e.phone, e.college, e.email, e.category, e.theme, formattedTime, e.timestamp
+      ].map(field => `"${(field || '').toString().replace(/"/g, '""')}"`).join(",");
+    });
     
     // Blob and download
     const csvString = [headers.join(","), ...rows].join("\n");
@@ -232,6 +268,14 @@ function AdminDashboard({ token }) {
     document.body.removeChild(link);
   };
 
+  const formatTimeAdmin = (ms) => {
+    if (ms == null) return "N/A";
+    const mins = Math.floor(ms / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+    const milli = (ms % 1000).toString().padStart(3, '0');
+    return `${mins}:${secs}.${milli}`;
+  };
+
   return (
     <div className="admin-dashboard fade-in">
        <h2>Admin Command Center</h2>
@@ -242,7 +286,7 @@ function AdminDashboard({ token }) {
          <button onClick={exportToCSV} style={{background: 'var(--secondary)', color: 'black'}}>📥 Export Excel</button>
        </div>
 
-       <div className="admin-table-wrapper">
+        <div className="admin-table-wrapper">
          <table className="admin-table">
            <thead>
              <tr>
@@ -252,7 +296,8 @@ function AdminDashboard({ token }) {
                <th>College</th>
                <th>Category</th>
                <th>Theme</th>
-               <th>Time</th>
+               <th>Time Taken</th>
+               <th>Registered</th>
              </tr>
            </thead>
            <tbody>
@@ -264,6 +309,7 @@ function AdminDashboard({ token }) {
                  <td>{e.college}</td>
                  <td>{e.category}</td>
                  <td>{e.theme}</td>
+                 <td style={{fontFamily: 'monospace', color: 'var(--primary)'}}>{formatTimeAdmin(e.timeTaken)}</td>
                  <td>{e.timestamp}</td>
                </tr>
              ))}

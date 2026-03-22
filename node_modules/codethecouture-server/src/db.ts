@@ -11,6 +11,7 @@ export interface Entry {
   category?: string;
   puzzleAnswer?: string;
   theme?: string;
+  timeTaken?: number;
   status: string;
   timestamp: string;
 }

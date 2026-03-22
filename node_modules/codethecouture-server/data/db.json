@@ -48,6 +48,30 @@
       "puzzleIndex": 1,
       "status": "REGISTERED",
       "timestamp": "3/21/2026, 10:33:15 PM"
+    },
+    {
+      "id": "VLkhEG3PRX",
+      "team": "svet",
+      "leader": "svet",
+      "phone": "9922883344",
+      "college": "CIC",
+      "email": "svet@gmail.com",
+      "category": "Human vs Machine Identity",
+      "status": "REGISTERED",
+      "timestamp": "3/22/2026, 8:52:11 AM"
+    },
+    {
+      "id": "1aZXQrk1it",
+      "team": "svety",
+      "leader": "svety",
+      "phone": "9911884433",
+      "college": "CIC",
+      "email": "svety@gmail.com",
+      "category": "Nature, Wildlife & Ecosystems",
+      "status": "SECURED",
+      "timestamp": "3/22/2026, 8:56:40 AM",
+      "theme": "Plastic Mermaid",
+      "puzzleAnswer": "NATURE, WILDLIFE, ECOSYSTEM"
     }
   ]
 }

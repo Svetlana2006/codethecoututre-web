@@ -197,21 +197,6 @@ export const CATEGORIES = [
         "text": "The Core: Who I am - What I look like = ? Wordplay: The \"User Name\" of your soul.",
         "answer": "IDENTITY",
         "length": 8
-      },
-      {
-        "text": "A brain smarter than us, but still following our orders. What does your mom say when you show her a reel of progressive parents? “Ye .. hain.”",
-        "answer": "AI",
-        "length": 2
-      },
-      {
-        "text": "The Pattern: Input → Decision Tree → Result. Wordplay: The invisible chef following a recipe you never gave me. It is how your IG feed is built.",
-        "answer": "ALGORITHM",
-        "length": 9
-      },
-      {
-        "text": "A “Stem” Structure: Rule A + Rule B = Predictable Output. Logic: The skeleton of the digital world; without me, data has no shape. R Maan’s song.",
-        "answer": "SYSTEM",
-        "length": 6
       }
     ],
     "themes": [
@@ -234,11 +219,30 @@ export const CATEGORIES = [
       {
         "name": "Emotionless Efficiency",
         "description": "Emotions are outdated. Go minimal, structured, metallic - pure machine mindset."
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "AI Control, Algorithms & Systems",
+    "puzzles": [
+      {
+        "text": "A brain smarter than us, but still following our orders. What does your mom say when you show her a reel of progressive parents? “Ye .. hain.”",
+        "answer": "AI",
+        "length": 2
       },
       {
-        "name": "AI Control, Algorithms & Systems",
-        "description": ""
+        "text": "The Pattern: Input → Decision Tree → Result. Wordplay: The invisible chef following a recipe you never gave me. It is how your IG feed is built.",
+        "answer": "ALGORITHM",
+        "length": 9
       },
+      {
+        "text": "A “Stem” Structure: Rule A + Rule B = Predictable Output. Logic: The skeleton of the digital world; without me, data has no shape. R Maan’s song.",
+        "answer": "SYSTEM",
+        "length": 6
+      }
+    ],
+    "themes": [
       {
         "name": "Watched All the Time",
         "description": "Live in a surveillance world. Eyes, QR codes, strings - you're constantly tracked and analyzed."

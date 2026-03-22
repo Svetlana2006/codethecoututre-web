@@ -9,7 +9,16 @@ for (let i = 0; i < content.length; i++) {
   if (!line) continue;
   
   if (line.match(/^\d+\.\s+/) && !line.match(/^Ans:/)) {
-    if (content[i+1] && content[i+1].trim().startsWith('Puzzle')) {
+    // Check if the next non-empty line starts with 'Puzzle'
+    let isCategory = false;
+    let j = i + 1;
+    while(j < content.length && !content[j].trim()) j++;
+    
+    if (content[j] && content[j].trim().startsWith('Puzzle')) {
+      isCategory = true;
+    }
+
+    if (isCategory) {
       currentCategory = { 
         id: parseInt(line.split('.')[0]), 
         name: line.replace(/^\d+\.\s+/, ''), 
@@ -34,6 +43,7 @@ for (let i = 0; i < content.length; i++) {
       const lettersMatch = line.match(/\((\d+) letters\)/);
       const letters = lettersMatch ? lettersMatch[1] : '';
       
+      // If we already have 3 puzzles, and we see another Puzzle without a category, something is wrong. But this fixes the issue.
       currentCategory.puzzles.push({ text: text, answer: '', length: parseInt(letters) });
   } else if (line.startsWith('Ans:')) {
       currentCategory.puzzles[currentCategory.puzzles.length - 1].answer = line.replace('Ans:', '').trim();
