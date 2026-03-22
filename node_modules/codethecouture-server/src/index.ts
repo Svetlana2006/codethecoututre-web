@@ -117,7 +117,21 @@ app.get("/api/slots", (req, res) => {
       slots[t.name] = entries.filter(e => e.theme === t.name).length;
     });
   });
-  return res.json({ slots, max: MAX_SLOTS_PER_THEME });
+  return res.json({ slots, max: MAX_SLOTS_PER_THEME, isLaunched: db.isLaunched(), launchDate: db.getLaunchDate() });
+});
+
+app.post("/api/status", (req, res) => {
+  const token = req.headers.authorization;
+  if (!token || token !== "super-secret-admin-token") {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  const { isLaunched, launchDate } = req.body;
+  
+  if (isLaunched !== undefined) db.setLaunched(isLaunched);
+  if (launchDate !== undefined) db.setLaunchDate(launchDate);
+
+  return res.json({ success: true, isLaunched: db.isLaunched(), launchDate: db.getLaunchDate() });
 });
 
 const HOST = "0.0.0.0";

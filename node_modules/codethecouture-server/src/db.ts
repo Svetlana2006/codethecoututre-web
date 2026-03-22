@@ -18,7 +18,7 @@ export interface Entry {
 
 export class JsonDb {
   private file: string;
-  private data: { entries: Entry[] } = { entries: [] };
+  private data: { entries: Entry[], isLaunched?: boolean, launchDate?: string } = { entries: [] };
 
   constructor(dir: string) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -40,6 +40,24 @@ export class JsonDb {
 
   getEntries(): Entry[] {
     return this.data.entries;
+  }
+
+  isLaunched(): boolean {
+    return !!this.data.isLaunched;
+  }
+
+  setLaunched(val: boolean) {
+    this.data.isLaunched = val;
+    this.save();
+  }
+
+  getLaunchDate(): string {
+    return this.data.launchDate || '2026-04-01T00:00:00+05:30';
+  }
+
+  setLaunchDate(val: string) {
+    this.data.launchDate = val;
+    this.save();
   }
 
   getEntry(id: string): Entry | undefined {

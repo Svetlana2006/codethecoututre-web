@@ -25,6 +25,29 @@ function App() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [finalTime, setFinalTime] = useState(null);
 
+  // Launch Countdown & Admin Override
+  const [adminOverride, setAdminOverride] = useState(false);
+  const [isGlobalLaunched, setIsGlobalLaunched] = useState(false);
+  const [globalLaunchDate, setGlobalLaunchDate] = useState('2026-04-01T00:00:00+05:30');
+
+  const calculateTimeLeft = (targetDate) => {
+    const launchDate = new Date(targetDate || '2026-04-01T00:00:00+05:30');
+    const difference = launchDate - new Date();
+    if (difference <= 0) return null;
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60)
+    };
+  };
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(globalLaunchDate));
+
+  useEffect(() => {
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft(globalLaunchDate)), 1000);
+    return () => clearInterval(timer);
+  }, [globalLaunchDate]);
+
   // Fetch slots immediately so duplicate checks are quick
   useEffect(() => {
     fetchSlots();
@@ -34,6 +57,8 @@ function App() {
     try {
       const resp = await axios.get(`${API_URL}/slots`);
       setSlotData(resp.data);
+      if (resp.data.isLaunched !== undefined) setIsGlobalLaunched(resp.data.isLaunched);
+      if (resp.data.launchDate) setGlobalLaunchDate(resp.data.launchDate);
     } catch (err) {
       console.error(err);
     }
@@ -129,26 +154,58 @@ function App() {
       )}
       <header>
         <h1>🔥 CODE THE COUTURE</h1>
-        <p className="subtitle">DECODE • DESIGN • DISRUPT</p>
+        <p className="subtitle">DECODE • <span onClick={() => setAdminOverride(true)} style={{cursor: "default"}}>DESIGN</span> • DISRUPT</p>
       </header>
 
       {step === 1 && (
-        <form className="card fade-in" onSubmit={handleRegisterSubmit}>
-          <h2>Registration</h2>
-          {errorMsg && <div className="error-box">{errorMsg}</div>}
-          <input placeholder="Team Name" required value={formData.team} onChange={e => setFormData({...formData, team: e.target.value})} />
-          <input placeholder="Team Leader's Name" required value={formData.leader} onChange={e => setFormData({...formData, leader: e.target.value})} />
-          <input type="number" placeholder="WhatsApp Number (10 digits)" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-          <input placeholder="College" required value={formData.college} onChange={e => setFormData({...formData, college: e.target.value})} />
-          <input type="email" placeholder="Email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-          
-          <button type="submit" disabled={loading}>{loading ? 'Authenticating...' : 'Initialize Decode'}</button>
-        </form>
+        (timeLeft && !adminOverride && !isGlobalLaunched) ? (
+          <div className="card fade-in" style={{ textAlign: "center", padding: "60px 20px" }}>
+            <h2 className="glitch" data-text="DECRYPTION OFFLINE" style={{ fontSize: "2.2rem", marginBottom: "25px", color: "var(--primary)" }}>DECRYPTION OFFLINE</h2>
+            <p style={{ fontSize: "1.1rem", color: "#ccc", marginBottom: "40px", lineHeight: "1.6" }}>
+              The Couture mainframe is currently sleeping... <br/>
+              Registration protocols will initialize on <strong style={{color: 'white', letterSpacing: '1px'}}>{
+                  globalLaunchDate.startsWith('2026-04-01T') 
+                    ? 'April 1st' 
+                    : new Date(globalLaunchDate).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+              }</strong>.
+            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "10px", fontFamily: "Orbitron, sans-serif", flexWrap: "wrap" }}>
+               <div style={{ background: "rgba(0,0,0,0.6)", padding: "15px", borderRadius: "8px", border: "1px solid var(--secondary)", minWidth: "75px" }}>
+                 <div style={{ fontSize: "2rem", color: "white" }}>{timeLeft.days}</div>
+                 <div style={{ fontSize: "0.8rem", color: "var(--secondary)", letterSpacing: "1px", marginTop: "5px" }}>DAYS</div>
+               </div>
+               <div style={{ background: "rgba(0,0,0,0.6)", padding: "15px", borderRadius: "8px", border: "1px solid var(--secondary)", minWidth: "75px" }}>
+                 <div style={{ fontSize: "2rem", color: "white" }}>{timeLeft.hours}</div>
+                 <div style={{ fontSize: "0.8rem", color: "var(--secondary)", letterSpacing: "1px", marginTop: "5px" }}>HRS</div>
+               </div>
+               <div style={{ background: "rgba(0,0,0,0.6)", padding: "15px", borderRadius: "8px", border: "1px solid var(--secondary)", minWidth: "75px" }}>
+                 <div style={{ fontSize: "2rem", color: "white" }}>{timeLeft.minutes}</div>
+                 <div style={{ fontSize: "0.8rem", color: "var(--secondary)", letterSpacing: "1px", marginTop: "5px" }}>MINS</div>
+               </div>
+               <div style={{ background: "rgba(0,0,0,0.6)", padding: "15px", borderRadius: "8px", border: "1px solid var(--secondary)", minWidth: "75px", borderColor: "var(--primary)" }}>
+                 <div style={{ fontSize: "2rem", color: "var(--primary)" }}>{timeLeft.seconds}</div>
+                 <div style={{ fontSize: "0.8rem", color: "var(--primary)", letterSpacing: "1px", marginTop: "5px" }}>SECS</div>
+               </div>
+            </div>
+          </div>
+        ) : (
+          <form className="card fade-in" onSubmit={handleRegisterSubmit}>
+            <h2>Registration</h2>
+            {errorMsg && <div className="error-box">{errorMsg}</div>}
+            <input placeholder="Team Name" required value={formData.team} onChange={e => setFormData({...formData, team: e.target.value})} />
+            <input placeholder="Team Leader's Name" required value={formData.leader} onChange={e => setFormData({...formData, leader: e.target.value})} />
+            <input type="number" placeholder="WhatsApp Number (10 digits)" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            <input placeholder="College" required value={formData.college} onChange={e => setFormData({...formData, college: e.target.value})} />
+            <input type="email" placeholder="Email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+            
+            <button type="submit" disabled={loading}>{loading ? 'Authenticating...' : 'Initialize Decode'}</button>
+          </form>
+        )
       )}
 
       {step === 2 && assignedCategory && (
         <div className="card puzzle-card fade-in">
-          <h2 className="glitch">SYSTEM ENCRYPTED</h2>
+          <h2 className="glitch" data-text="SYSTEM ENCRYPTED">SYSTEM ENCRYPTED</h2>
           <p>A category has been assigned. Decode ALL sectors to unlock themes.</p>
           <div className="puzzle-box">
              <h3>Category Locked: Sector {assignedCategory.id}</h3>
@@ -216,13 +273,19 @@ function App() {
       )}
 
       {step === 5 && (
-         <AdminDashboard token={adminToken} />
+         <AdminDashboard 
+            token={adminToken} 
+            isGlobalLaunched={isGlobalLaunched} 
+            setIsGlobalLaunched={setIsGlobalLaunched} 
+            globalLaunchDate={globalLaunchDate} 
+            setGlobalLaunchDate={setGlobalLaunchDate} 
+         />
       )}
     </div>
   );
 }
 
-function AdminDashboard({ token }) {
+function AdminDashboard({ token, isGlobalLaunched, setIsGlobalLaunched, globalLaunchDate, setGlobalLaunchDate }) {
   const [filterStr, setFilterStr] = useState('');
   const [entries, setEntries] = useState([]);
   
@@ -236,6 +299,38 @@ function AdminDashboard({ token }) {
   };
 
   useEffect(() => { handleReload(); }, []);
+
+  const handleToggleLaunch = async () => {
+    if (!isGlobalLaunched) {
+       if (window.confirm("Are you sure you want to GLOBALLY LAUNCH the event? The countdown will be permanently removed for all users!")) {
+         try {
+           await axios.post(`${API_URL}/status`, { isLaunched: true }, { headers: { Authorization: token } });
+           setIsGlobalLaunched(true);
+           alert("GLOBAL LAUNCH INITIATED! Registration is now completely open.");
+         } catch(err) {
+           alert("Failed to launch quiz stream.");
+         }
+       }
+    } else {
+       const newDateStr = prompt("The system is currently LAUNCHED.\n\nEnter the exact Date and Time to reopen (e.g. April 1, 2026 10:00 AM).\nThis will be processed in your local time zone (IST):", "April 1, 2026 10:00 AM");
+       if (newDateStr) {
+         try {
+           const parsedDate = new Date(newDateStr);
+           if (isNaN(parsedDate.getTime())) {
+             alert("Invalid date format. Please use a format like 'April 1, 2026 10:00 AM'.");
+             return;
+           }
+           const isoString = parsedDate.toISOString();
+           await axios.post(`${API_URL}/status`, { isLaunched: false, launchDate: isoString }, { headers: { Authorization: token } });
+           setIsGlobalLaunched(false);
+           setGlobalLaunchDate(isoString);
+           alert(`SYSTEM LOCKED.\nOffline countdown to ${parsedDate.toLocaleString("en-IN")} perfectly initialized!`);
+         } catch(err) {
+           alert("Failed to lock quiz stream.");
+         }
+       }
+    }
+  };
 
   const filtered = entries.filter(e => 
     e.team?.toLowerCase().includes(filterStr.toLowerCase()) || 
@@ -284,6 +379,9 @@ function AdminDashboard({ token }) {
          <input placeholder="Search Team, College, Category..." value={filterStr} onChange={e => setFilterStr(e.target.value)} />
          <button onClick={handleReload}>↻ Refresh Data</button>
          <button onClick={exportToCSV} style={{background: 'var(--secondary)', color: 'black'}}>📥 Export Excel</button>
+         <button onClick={handleToggleLaunch} style={{background: isGlobalLaunched ? '#ff3366' : '#00ff6a', color: isGlobalLaunched ? 'white' : 'black'}}>
+             {isGlobalLaunched ? '🛑 STOP QUIZ' : '🚀 LAUNCH QUIZ'}
+         </button>
        </div>
 
         <div className="admin-table-wrapper">
