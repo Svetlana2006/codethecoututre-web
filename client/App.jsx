@@ -41,10 +41,46 @@ function App() {
       seconds: Math.floor((difference / 1000) % 60)
     };
   };
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(globalLaunchDate));
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [currentPhase, setCurrentPhase] = useState('OPEN');
 
   useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(calculateTimeLeft(globalLaunchDate)), 1000);
+    const checkPhase = () => {
+      const now = new Date();
+      const p1 = new Date('2026-04-01T14:15:00+05:30'); // 2:15 PM IST
+      const p2 = new Date('2026-04-01T19:15:00+05:30'); // 7:15 PM IST
+      const p3 = new Date('2026-04-01T20:15:00+05:30'); // 8:15 PM IST
+
+      let phase = 'OPEN';
+      let targetForCountdown = null;
+
+      if (now < p1) {
+        phase = 'OPEN';
+      } else if (now < p2) {
+        phase = 'COUNTDOWN';
+        targetForCountdown = p2;
+      } else if (now < p3) {
+        phase = 'OPEN';
+      } else {
+        phase = 'CLOSED';
+      }
+
+      const adminLaunch = new Date(globalLaunchDate);
+      if (adminLaunch > now && adminLaunch > p3) {
+        phase = 'COUNTDOWN';
+        targetForCountdown = adminLaunch;
+      }
+
+      setCurrentPhase(phase);
+      if (phase === 'COUNTDOWN' && targetForCountdown) {
+        setTimeLeft(calculateTimeLeft(targetForCountdown));
+      } else {
+        setTimeLeft(null);
+      }
+    };
+    
+    const timer = setInterval(checkPhase, 1000);
+    checkPhase(); 
     return () => clearInterval(timer);
   }, [globalLaunchDate]);
 
@@ -158,14 +194,21 @@ function App() {
       </header>
 
       {step === 1 && (
-        (timeLeft && !adminOverride && !isGlobalLaunched) ? (
+        (!adminOverride && !isGlobalLaunched && currentPhase === 'CLOSED') ? (
+          <div className="card fade-in" style={{ textAlign: "center", padding: "60px 20px" }}>
+            <h2 className="glitch" data-text="REGISTRATIONS CLOSED" style={{ fontSize: "2.2rem", marginBottom: "25px", color: "var(--primary)" }}>REGISTRATIONS CLOSED</h2>
+            <p style={{ fontSize: "1.1rem", color: "#ccc", marginBottom: "40px", lineHeight: "1.6" }}>
+              Thank you for the overwhelming response. Registrations for Code The Couture are now completely offline.
+            </p>
+          </div>
+        ) : (!adminOverride && !isGlobalLaunched && currentPhase === 'COUNTDOWN' && timeLeft) ? (
           <div className="card fade-in" style={{ textAlign: "center", padding: "60px 20px" }}>
             <h2 className="glitch" data-text="DECRYPTION OFFLINE" style={{ fontSize: "2.2rem", marginBottom: "25px", color: "var(--primary)" }}>DECRYPTION OFFLINE</h2>
             <p style={{ fontSize: "1.1rem", color: "#ccc", marginBottom: "40px", lineHeight: "1.6" }}>
               The Couture mainframe is currently sleeping... <br/>
               Registration protocols will initialize on <strong style={{color: 'white', letterSpacing: '1px'}}>{
                   globalLaunchDate.startsWith('2026-04-01T') 
-                    ? 'April 1st 1:00 PM IST' 
+                    ? 'April 1st 7:15 PM IST' 
                     : new Date(globalLaunchDate).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
               }</strong>.
             </p>
