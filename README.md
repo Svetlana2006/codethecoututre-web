@@ -2,7 +2,7 @@
 
 **Decode • Design • Disrupt**
 
-A full-stack registration and theme-selection dashboard built for the ultimate technical fashion competition! Designed with a premium, glassmorphic cyber-aesthetic, this application gamifies the registration process by forcing teams to decrypt a puzzle to unlock their design themes .
+A full-stack registration and theme-selection dashboard built for the ultimate technical fashion competition! Designed with a premium, glassmorphic cyber-aesthetic, this application gamifies the registration process by forcing teams to decrypt a puzzle to unlock their design themes.
 
 ## 🚀 Key Features
 
