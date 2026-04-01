@@ -52,7 +52,7 @@ export class JsonDb {
   }
 
   getLaunchDate(): string {
-    return this.data.launchDate || '2026-04-01T00:00:00+05:30';
+    return this.data.launchDate || '2026-04-01T13:00:00+05:30';
   }
 
   setLaunchDate(val: string) {

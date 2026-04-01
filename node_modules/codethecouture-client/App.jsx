@@ -28,10 +28,10 @@ function App() {
   // Launch Countdown & Admin Override
   const [adminOverride, setAdminOverride] = useState(false);
   const [isGlobalLaunched, setIsGlobalLaunched] = useState(false);
-  const [globalLaunchDate, setGlobalLaunchDate] = useState('2026-04-01T00:00:00+05:30');
+  const [globalLaunchDate, setGlobalLaunchDate] = useState('2026-04-01T13:00:00+05:30');
 
   const calculateTimeLeft = (targetDate) => {
-    const launchDate = new Date(targetDate || '2026-04-01T00:00:00+05:30');
+    const launchDate = new Date(targetDate || '2026-04-01T13:00:00+05:30');
     const difference = launchDate - new Date();
     if (difference <= 0) return null;
     return {
@@ -165,7 +165,7 @@ function App() {
               The Couture mainframe is currently sleeping... <br/>
               Registration protocols will initialize on <strong style={{color: 'white', letterSpacing: '1px'}}>{
                   globalLaunchDate.startsWith('2026-04-01T') 
-                    ? 'April 1st' 
+                    ? 'April 1st 1:00 PM IST' 
                     : new Date(globalLaunchDate).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
               }</strong>.
             </p>
